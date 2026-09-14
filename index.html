@@ -49,7 +49,6 @@
   .view { display: none; padding: 16px; }
   .view.active { display: block; }
 
-  /* Buttons */
   .btn {
     background: linear-gradient(135deg, #2ecc71, #27ae60);
     color: #fff;
@@ -60,12 +59,9 @@
     font-size: 14px;
     cursor: pointer;
   }
-  .btn.secondary {
-    background: #1a3a5c;
-  }
-  .btn.danger {
-    background: #c0392b;
-  }
+  .btn.secondary { background: #1a3a5c; }
+  .btn.danger { background: #c0392b; }
+  .btn.small { padding: 8px 12px; font-size: 12px; }
   .btn-row {
     display: flex;
     gap: 10px;
@@ -73,7 +69,6 @@
     flex-wrap: wrap;
   }
 
-  /* Player cards grid */
   .player-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -104,14 +99,13 @@
     margin-bottom: 4px;
   }
   .badge {
-    display: inline-block;
+    display: block;
     background: #1e8e5a;
     color: #fff;
     font-size: 10px;
     padding: 3px 8px;
     border-radius: 20px;
     margin: 0 auto;
-    display: block;
     width: fit-content;
     text-align:center;
   }
@@ -123,9 +117,7 @@
   }
   .star { color: #445; cursor: pointer; }
   .star.filled { color: #f1c40f; }
-  .card-actions {
-    display:flex; gap:6px; margin-top:10px;
-  }
+  .card-actions { display:flex; gap:6px; margin-top:10px; }
   .card-actions button {
     flex:1;
     padding: 8px;
@@ -134,6 +126,7 @@
     border:none;
     font-weight:600;
     cursor:pointer;
+    color:#fff;
   }
   .num-badge {
     position:absolute; top:10px; left:10px;
@@ -143,7 +136,6 @@
     display:flex; align-items:center; justify-content:center;
   }
 
-  /* Modal */
   .modal-overlay {
     display:none;
     position:fixed; top:0; left:0; right:0; bottom:0;
@@ -186,9 +178,9 @@
   .star-picker span { cursor:pointer; color:#445; padding: 0 2px; }
   .star-picker span.filled { color:#f1c40f; }
 
-  /* Field view */
   .formation-select {
     display:flex; gap:8px; margin-bottom:14px; overflow-x:auto;
+    padding-bottom: 4px;
   }
   .formation-select button {
     padding:8px 14px; border-radius:8px; border:1px solid #1e4a6e;
@@ -209,9 +201,7 @@
     overflow: hidden;
     border: 3px solid #2ecc71;
   }
-  .field-lines {
-    position:absolute; inset:0;
-  }
+  .field-lines { position:absolute; inset:0; }
   .field-lines::before {
     content:'';
     position:absolute;
@@ -243,6 +233,7 @@
     margin: 0 auto 2px;
     font-size:20px;
     color:#7f9cb5;
+    position: relative;
   }
   .pos-slot.filled .circle {
     border-style: solid;
@@ -265,6 +256,18 @@
     text-overflow:ellipsis;
     white-space:nowrap;
   }
+  .edit-pos-btn {
+    position:absolute;
+    top:-4px; right:-4px;
+    width:18px; height:18px;
+    background:#f1c40f;
+    color:#0a1929;
+    border-radius:50%;
+    font-size:11px;
+    font-weight:800;
+    display:flex; align-items:center; justify-content:center;
+    border: 1px solid #0a1929;
+  }
 
   .bench-section {
     background:#0f2942;
@@ -273,9 +276,7 @@
     border:1px solid #1e4a6e;
   }
   .bench-section h3 { color:#7f9cb5; font-size:13px; margin-bottom:10px; text-transform:uppercase; }
-  .bench-list {
-    display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;
-  }
+  .bench-list { display:flex; gap:10px; overflow-x:auto; padding-bottom:6px; }
   .bench-player {
     min-width:80px;
     background:#12324e;
@@ -310,7 +311,6 @@
   }
   .hint-box.active { display:block; }
 
-  /* Saved formations */
   .saved-list { display:flex; flex-direction:column; gap:10px; }
   .saved-item {
     background:#12324e;
@@ -324,7 +324,7 @@
   .saved-item .info span { font-size:12px; color:#7f9cb5; }
   .saved-item .actions { display:flex; gap:6px; }
   .saved-item .actions button {
-    padding:6px 10px; font-size:11px; border-radius:6px; border:none; font-weight:600;
+    padding:6px 10px; font-size:11px; border-radius:6px; border:none; font-weight:600; color:#fff;
   }
 
   .empty-state {
@@ -354,6 +354,27 @@
     margin-bottom:10px;
     text-transform:uppercase;
     letter-spacing:1px;
+  }
+
+  .pos-option-grid {
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap:8px;
+  }
+  .pos-option-grid button {
+    padding:10px 6px;
+    border-radius:8px;
+    border:1px solid #1e4a6e;
+    background:#12324e;
+    color:#fff;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .pos-option-grid button.current {
+    background:#2ecc71;
+    color:#0a1929;
+    border-color:#2ecc71;
   }
 </style>
 </head>
@@ -390,6 +411,9 @@
   <div class="btn-row" style="margin-top:16px;">
     <button class="btn" onclick="openSaveFormationModal()">💾 Aufstellung speichern</button>
     <button class="btn secondary" onclick="resetFormation()">🔄 Zurücksetzen</button>
+  </div>
+  <div class="hint-box active" style="background:#12324e;border-left-color:#2ecc71;color:#7f9cb5;">
+    💡 Tipp: Tippe auf das <b style="color:#f1c40f;">gelbe Stift-Symbol</b> an einer Position, um die Positionsart zu ändern (z.B. DM → OM).
   </div>
 </div>
 
@@ -478,14 +502,30 @@
   </div>
 </div>
 
+<!-- EDIT POSITION MODAL -->
+<div class="modal-overlay" id="editPosModal">
+  <div class="modal">
+    <h2>Position ändern</h2>
+    <p style="color:#7f9cb5; font-size:13px; margin-bottom:14px;">Wähle eine neue Positionsart für diesen Platz:</p>
+    <div class="pos-option-grid" id="posOptionGrid"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeModal('editPosModal')">Schließen</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ---------- DATA ----------
 let players = JSON.parse(localStorage.getItem('players') || '[]');
 let savedFormations = JSON.parse(localStorage.getItem('savedFormations') || '[]');
 let currentFormationType = localStorage.getItem('currentFormationType') || '4-4-2';
-let currentAssignment = JSON.parse(localStorage.getItem('currentAssignment') || '{}'); // slotId -> playerId
+let currentAssignment = JSON.parse(localStorage.getItem('currentAssignment') || '{}');
+let customSlotLabels = JSON.parse(localStorage.getItem('customSlotLabels') || '{}'); // "formationType|slotId" -> label
 let selectedBenchPlayer = null;
 let editingStarRating = 0;
+let editingSlotId = null;
+
+const POSITION_OPTIONS = ['TW','IV','AV','DM','ZM','OM','FL','ST'];
 
 const FORMATIONS = {
   '4-4-2': [
@@ -505,6 +545,39 @@ const FORMATIONS = {
     {id:'d1', label:'IV', x:25, y:78}, {id:'d2', label:'IV', x:50, y:80}, {id:'d3', label:'IV', x:75, y:78},
     {id:'m1', label:'AV', x:10, y:55}, {id:'m2', label:'ZM', x:33, y:52}, {id:'m3', label:'ZM', x:50, y:56}, {id:'m4', label:'ZM', x:67, y:52}, {id:'m5', label:'AV', x:90, y:55},
     {id:'f1', label:'ST', x:35, y:20}, {id:'f2', label:'ST', x:65, y:20}
+  ],
+  '4-2-3-1': [
+    {id:'gk', label:'TW', x:50, y:92},
+    {id:'d1', label:'AV', x:15, y:75}, {id:'d2', label:'IV', x:37, y:78}, {id:'d3', label:'IV', x:63, y:78}, {id:'d4', label:'AV', x:85, y:75},
+    {id:'m1', label:'DM', x:35, y:60}, {id:'m2', label:'DM', x:65, y:60},
+    {id:'o1', label:'OM', x:15, y:35}, {id:'o2', label:'OM', x:50, y:32}, {id:'o3', label:'OM', x:85, y:35},
+    {id:'f1', label:'ST', x:50, y:12}
+  ],
+  '4-1-4-1': [
+    {id:'gk', label:'TW', x:50, y:92},
+    {id:'d1', label:'AV', x:15, y:75}, {id:'d2', label:'IV', x:37, y:78}, {id:'d3', label:'IV', x:63, y:78}, {id:'d4', label:'AV', x:85, y:75},
+    {id:'dm', label:'DM', x:50, y:60},
+    {id:'m1', label:'FL', x:12, y:40}, {id:'m2', label:'ZM', x:37, y:42}, {id:'m3', label:'ZM', x:63, y:42}, {id:'m4', label:'FL', x:88, y:40},
+    {id:'f1', label:'ST', x:50, y:14}
+  ],
+  '3-4-3': [
+    {id:'gk', label:'TW', x:50, y:92},
+    {id:'d1', label:'IV', x:25, y:78}, {id:'d2', label:'IV', x:50, y:80}, {id:'d3', label:'IV', x:75, y:78},
+    {id:'m1', label:'AV', x:10, y:52}, {id:'m2', label:'ZM', x:37, y:55}, {id:'m3', label:'ZM', x:63, y:55}, {id:'m4', label:'AV', x:90, y:52},
+    {id:'f1', label:'FL', x:15, y:20}, {id:'f2', label:'ST', x:50, y:14}, {id:'f3', label:'FL', x:85, y:20}
+  ],
+  '5-3-2': [
+    {id:'gk', label:'TW', x:50, y:92},
+    {id:'d1', label:'AV', x:8, y:70}, {id:'d2', label:'IV', x:28, y:78}, {id:'d3', label:'IV', x:50, y:80}, {id:'d4', label:'IV', x:72, y:78}, {id:'d5', label:'AV', x:92, y:70},
+    {id:'m1', label:'ZM', x:25, y:50}, {id:'m2', label:'ZM', x:50, y:52}, {id:'m3', label:'ZM', x:75, y:50},
+    {id:'f1', label:'ST', x:35, y:18}, {id:'f2', label:'ST', x:65, y:18}
+  ],
+  '4-4-1-1': [
+    {id:'gk', label:'TW', x:50, y:92},
+    {id:'d1', label:'AV', x:15, y:75}, {id:'d2', label:'IV', x:37, y:78}, {id:'d3', label:'IV', x:63, y:78}, {id:'d4', label:'AV', x:85, y:75},
+    {id:'m1', label:'ZM', x:15, y:52}, {id:'m2', label:'ZM', x:37, y:54}, {id:'m3', label:'ZM', x:63, y:54}, {id:'m4', label:'ZM', x:85, y:52},
+    {id:'o1', label:'OM', x:50, y:30},
+    {id:'f1', label:'ST', x:50, y:12}
   ]
 };
 
@@ -525,6 +598,7 @@ function save() {
   localStorage.setItem('savedFormations', JSON.stringify(savedFormations));
   localStorage.setItem('currentFormationType', currentFormationType);
   localStorage.setItem('currentAssignment', JSON.stringify(currentAssignment));
+  localStorage.setItem('customSlotLabels', JSON.stringify(customSlotLabels));
 }
 
 // ---------- PLAYER CRUD ----------
@@ -542,8 +616,8 @@ function renderPlayerGrid() {
       <div class="badge">${p.position}</div>
       <div class="stars">${renderStarsDisplay(p.rating)}</div>
       <div class="card-actions">
-        <button class="btn secondary" style="color:#fff" onclick="openPlayerModal('${p.id}')">Bearbeiten</button>
-        <button class="btn danger" style="color:#fff" onclick="deletePlayer('${p.id}')">Löschen</button>
+        <button style="background:#1a3a5c;" onclick="openPlayerModal('${p.id}')">Bearbeiten</button>
+        <button style="background:#c0392b;" onclick="deletePlayer('${p.id}')">Löschen</button>
       </div>
     </div>
   `).join('');
@@ -624,7 +698,6 @@ function savePlayer() {
 function deletePlayer(id) {
   if (!confirm('Spieler wirklich löschen?')) return;
   players = players.filter(p => p.id !== id);
-  // remove from field assignment too
   Object.keys(currentAssignment).forEach(slot => {
     if (currentAssignment[slot] === id) delete currentAssignment[slot];
   });
@@ -651,6 +724,11 @@ function switchFormation(type) {
   renderField();
 }
 
+function getSlotLabel(slot) {
+  const key = currentFormationType + '|' + slot.id;
+  return customSlotLabels[key] || slot.label;
+}
+
 function renderField() {
   renderFormationButtons();
   const slots = FORMATIONS[currentFormationType];
@@ -658,6 +736,7 @@ function renderField() {
   container.innerHTML = '<div class="field-lines"></div>';
 
   slots.forEach(slot => {
+    const label = getSlotLabel(slot);
     const playerId = currentAssignment[slot.id];
     const player = playerId ? players.find(p => p.id === playerId) : null;
     const div = document.createElement('div');
@@ -665,14 +744,40 @@ function renderField() {
     div.style.left = slot.x + '%';
     div.style.top = slot.y + '%';
     div.innerHTML = `
-      <div class="circle">${player ? getInitials(player.name) : slot.label}</div>
-      <div class="label">${player ? player.name : slot.label}</div>
+      <div class="circle">
+        ${player ? getInitials(player.name) : label}
+        <div class="edit-pos-btn" onclick="event.stopPropagation(); openEditPosModal('${slot.id}')">✎</div>
+      </div>
+      <div class="label">${player ? player.name : label}</div>
     `;
-    div.onclick = () => onSlotClick(slot.id, player);
+    div.querySelector('.circle').addEventListener('click', (e) => {
+      if (e.target.classList.contains('edit-pos-btn')) return;
+      onSlotClick(slot.id, player);
+    });
+    div.querySelector('.label').addEventListener('click', () => onSlotClick(slot.id, player));
     container.appendChild(div);
   });
 
   renderBench();
+}
+
+function openEditPosModal(slotId) {
+  editingSlotId = slotId;
+  const grid = document.getElementById('posOptionGrid');
+  const slot = FORMATIONS[currentFormationType].find(s => s.id === slotId);
+  const currentLabel = getSlotLabel(slot);
+  grid.innerHTML = POSITION_OPTIONS.map(pos => `
+    <button class="${pos === currentLabel ? 'current' : ''}" onclick="setSlotLabel('${pos}')">${pos}</button>
+  `).join('');
+  document.getElementById('editPosModal').classList.add('active');
+}
+
+function setSlotLabel(pos) {
+  const key = currentFormationType + '|' + editingSlotId;
+  customSlotLabels[key] = pos;
+  save();
+  closeModal('editPosModal');
+  renderField();
 }
 
 function getInitials(name) {
@@ -696,25 +801,19 @@ function renderBench() {
 }
 
 function onBenchClick(playerId) {
-  if (selectedBenchPlayer === playerId) {
-    selectedBenchPlayer = null;
-  } else {
-    selectedBenchPlayer = playerId;
-  }
+  selectedBenchPlayer = selectedBenchPlayer === playerId ? null : playerId;
   document.getElementById('hintBox').classList.toggle('active', !!selectedBenchPlayer);
   renderBench();
 }
 
 function onSlotClick(slotId, currentPlayer) {
   if (selectedBenchPlayer) {
-    // place selected bench player here (swap if occupied)
     currentAssignment[slotId] = selectedBenchPlayer;
     selectedBenchPlayer = null;
     document.getElementById('hintBox').classList.remove('active');
     save();
     renderField();
   } else if (currentPlayer) {
-    // remove player from slot back to bench
     if (confirm(currentPlayer.name + ' zurück auf die Bank setzen?')) {
       delete currentAssignment[slotId];
       save();
@@ -745,6 +844,7 @@ function confirmSaveFormation() {
     name,
     formationType: currentFormationType,
     assignment: {...currentAssignment},
+    customLabels: {...customSlotLabels},
     date: new Date().toLocaleDateString('de-DE')
   });
   save();
@@ -765,8 +865,8 @@ function renderSavedList() {
         <span>${f.formationType} • ${f.date}</span>
       </div>
       <div class="actions">
-        <button class="btn secondary" style="color:#fff" onclick="loadFormation('${f.id}')">Laden</button>
-        <button class="btn danger" style="color:#fff" onclick="deleteFormation('${f.id}')">Löschen</button>
+        <button style="background:#1a3a5c;" onclick="loadFormation('${f.id}')">Laden</button>
+        <button style="background:#c0392b;" onclick="deleteFormation('${f.id}')">Löschen</button>
       </div>
     </div>
   `).join('');
@@ -777,6 +877,7 @@ function loadFormation(id) {
   if (!f) return;
   currentFormationType = f.formationType;
   currentAssignment = {...f.assignment};
+  if (f.customLabels) customSlotLabels = {...customSlotLabels, ...f.customLabels};
   save();
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));

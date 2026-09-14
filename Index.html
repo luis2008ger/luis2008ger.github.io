@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kader-Manager</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: linear-gradient(135deg, #0d1117 0%, #0f2027 100%);
+    color: #e6edf3;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  #root { min-height: 100vh; }
+
+  .app { max-width: 1200px; margin: 0 auto; padding: 16px; }
+
+  .header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 16px 0; margin-bottom: 16px;
+  }
+  .header h1 {
+    font-size: 22px;
+    background: linear-gradient(90deg, #22c55e, #3b82f6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .tabs {
+    display: flex; gap: 4px; background: #161b22;
+    border-radius: 12px; padding: 4px; margin-bottom: 20px;
+    overflow-x: auto;
+  }
+  .tab {
+    flex: 1; padding: 10px 12px; text-align: center;
+    border-radius: 10px; cursor: pointer; font-weight: 600;
+    font-size: 14px; color: #9ca3af; white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    background: linear-gradient(90deg, #16a34a, #15803d);
+    color: white;
+  }
+
+  .btn {
+    background: linear-gradient(90deg, #22c55e, #16a34a);
+    color: white; border: none; padding: 10px 16px;
+    border-radius: 10px; font-weight: 600; cursor: pointer;
+    font-size: 14px;
+  }
+  .btn:active { opacity: 0.8; }
+  .btn.secondary {
+    background: #1f2937; color: #e6edf3; border: 1px solid #374151;
+  }
+  .btn.danger {
+    background: #7f1d1d; color: white;
+  }
+  .btn.small { padding: 6px 10px; font-size: 12px; }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+  }
+
+  .player-card {
+    background: linear-gradient(160deg, #1e293b, #0f172a);
+    border: 1px solid #263447;
+    border-radius: 16px;
+    padding: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .player-card:active { transform: scale(0.97); }
+
+  .player-photo {
+    width: 100%; aspect-ratio: 1;
+    background: #263447;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 32px; color: #4b5563;
+    margin-bottom: 8px;
+    border: 2px solid #16a34a;
+  }
+
+  .badge {
+    display: inline-block;
+    background: #16a34a;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+  }
+
+  .stars-small { font-size: 12px; color: #fbbf24; position: absolute; top: 10px; right: 10px; }
+
+  .player-name { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
+  .player-sub { font-size: 11px; color: #9ca3af; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: flex-end; justify-content: center;
+    z-index: 100;
+  }
+  .modal {
+    background: #161b22; border-radius: 20px 20px 0 0;
+    padding: 20px; width: 100%; max-width: 500px;
+    max-height: 90vh; overflow-y: auto;
+    border: 1px solid #263447;
+  }
+  @media (min-width: 600px) {
+    .modal-overlay { align-items: center; }
+    .modal { border-radius: 20px; }
+  }
+
+  .field-label { font-size: 12px; color: #9ca3af; margin-bottom: 4px; display: block; font-weight: 600; }
+  .input, select, textarea {
+    width: 100%; background: #0d1117; border: 1px solid #263447;
+    color: #e6edf3; padding: 10px 12px; border-radius: 10px;
+    font-size: 14px; margin-bottom: 14px;
+  }
+  textarea { resize: vertical; min-height: 70px; font-family: inherit; }
+
+  .stars-input { font-size: 28px; margin-bottom: 14px; }
+  .star { cursor: pointer; color: #374151; }
+  .star.filled { color: #fbbf24; }
+
+  .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
+  .modal-actions .btn { flex: 1; }
+
+  .field-wrap {
+    background: linear-gradient(180deg, #14532d, #166534);
+    border-radius: 16px;
+    padding: 12px;
+    aspect-ratio: 3/4.2;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #22c55e33;
+  }
+  .field-lines {
+    position: absolute; inset: 8px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-radius: 8px;
+  }
+  .field-lines::before {
+    content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
+    width: 2px; background: rgba(255,255,255,0.35); transform: translateX(-50%);
+  }
+  .center-circle {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 22%; aspect-ratio: 1; border: 2px solid rgba(255,255,255,0.35);
+    border-radius: 50%;
+  }
+  .penalty-top, .penalty-bottom {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    width: 44%; height: 12%; border: 2px solid rgba(255,255,255,0.35); border-top: none;
+  }
+  .penalty-top { top: 8px; border-top: none; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; transform: translateX(-50%) rotate(180deg); }
+  .penalty-bottom { bottom: 8px; border-radius: 0 0 4px 4px; }
+
+  .field-slot {
+    position: absolute; transform: translate(-50%, -50%);
+    width: 60px; text-align: center; cursor: grab;
+  }
+  .field-slot.dragover .slot-circle { box-shadow: 0 0 0 3px #22c55e; }
+  .slot-circle {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: #1e293b; border: 2px solid #16a34a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin: 0 auto 2px;
+  }
+  .slot-empty { background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.3); }
+  .slot-name {
+    font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.6);
+    padding: 2px 4px; border-radius: 4px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; max-width: 62px; margin: 0 auto;
+  }
+
+  .bench-wrap {
+    margin-top: 16px; background: #161b22; border-radius: 14px; padding: 12px;
+    border: 1px solid #263447;
+  }
+  .bench-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: #9ca3af; }
+  .bench-list { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+  .bench-player {
+    flex-shrink: 0; width: 70px; text-align: center; cursor: grab;
+    background: #0d1117; border-radius: 10px; padding: 8px 4px;
+    border: 1px solid #263447;
+  }
+
+  .formation-select { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; }
+  .formation-btn {
+    flex-shrink: 0; padding: 8px 14px; border-radius: 10px;
+    background: #1f2937; border: 1px solid #374151; color: #e6edf3;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .formation-btn.active { background: #16a34a; border-color: #16a34a; }
+
+  .saved-lineup-card {
+    background: #161b22; border: 1px solid #263447; border-radius: 14px;
+    padding: 14px; margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .empty-state {
+    text-align: center; padding: 40px 20px; color: #6b7280;
+  }
+  .section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+  .row { display: flex; gap: 10px; }
+  .row > * { flex: 1; }
+  .top-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+const POSITIONS = ["Torwart", "Innenverteidiger", "Außenverteidiger", "Defensives Mittelfeld", "Zentrales Mittelfeld", "Offensives Mittelfeld", "Flügel", "Stürmer"];
+
+const FORMATIONS = {
+  "4-4-2": [
+    {x:50,y:92,pos:"Torwart"},
+    {x:15,y:75,pos:"Außenverteidiger"},{x:38,y:78,pos:"Innenverteidiger"},{x:62,y:78,pos:"Innenverteidiger"},{x:85,y:75,pos:"Außenverteidiger"},
+    {x:15,y:50,pos:"Flügel"},{x:38,y:52,pos:"Zentrales Mittelfeld"},{x:62,y:52,pos:"Zentrales Mittelfeld"},{x:85,y:50,pos:"Flügel"},
+    {x:35,y:22,pos:"Stürmer"},{x:65,y:22,pos:"Stürmer"}
+  ],
+  "4-3-3": [
+    {x:50,y:92,pos:"Torwart"},
+    {x:15,y:75,pos:"Außenverteidiger"},{x:38,y:78,pos:"Innenverteidiger"},{x:62,y:78,pos:"Innenverteidiger"},{x:85,y:75,pos:"Außenverteidiger"},
+    {x:30,y:55,pos:"Zentrales Mittelfeld"},{x:50,y:60,pos:"Defensives Mittelfeld"},{x:70,y:55,pos:"Zentrales Mittelfeld"},
+    {x:20,y:25,pos:"Flügel"},{x:50,y:18,pos:"Stürmer"},{x:80,y:25,pos:"Flügel"}
+  ],
+  "3-5-2": [
+    {x:50,y:92,pos:"Torwart"},
+    {x:28,y:78,pos:"Innenverteidiger"},{x:50,y:80,pos:"Innenverteidiger"},{x:72,y:78,pos:"Innenverteidiger"},
+    {x:12,y:55,pos:"Flügel"},{x:32,y:58,pos:"Zentrales Mittelfeld"},{x:50,y:62,pos:"Defensives Mittelfeld"},{x:68,y:58,pos:"Zentrales Mittelfeld"},{x:88,y:55,pos:"Flügel"},
+    {x:35,y:22,pos:"Stürmer"},{x:65,y:22,pos:"Stürmer"}
+  ],
+  "4-2-3-1": [
+    {x:50,y:92,pos:"Torwart"},
+    {x:15,y:75,pos:"Außenverteidiger"},{x:38,y:78,pos:"Innenverteidiger"},{x:62,y:78,pos:"Innenverteidiger"},{x:85,y:75,pos:"Außenverteidiger"},
+    {x:35,y:62,pos:"Defensives Mittelfeld"},{x:65,y:62,pos:"Defensives Mittelfeld"},
+    {x:18,y:38,pos:"Flügel"},{x:50,y:40,pos:"Offensives Mittelfeld"},{x:82,y:38,pos:"Flügel"},
+    {x:50,y:15,pos:"Stürmer"}
+  ]
+};
+
+function loadLS(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e) { return fallback; }
+}
+function saveLS(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+function StarRating({ value, onChange, size }) {
+  return (
+    <div className={size === 'small' ? 'stars-small' : 'stars-input'}>
+      {[1,2,3,4,5].map(n => (
+        <span key={n}
+          className={"star" + (n <= value ? " filled" : "")}
+          onClick={(e) => { e.stopPropagation(); onChange && onChange(n); }}
+          style={{cursor: onChange ? 'pointer' : 'default'}}
+        >★</span>
+      ))}
+    </div>
+  );
+}
+
+function PlayerModal({ player, onSave, onClose, onDelete }) {
+  const [form, setForm] = useState(player || {
+    id: uid(), name: '', position: POSITIONS[0], rating: 3, notes: '',
+    trikotnummer: '', marktwert: '', alter: '', verein: ''
+  });
+
+  const set = (k,v) => setForm(f => ({...f, [k]: v}));
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14}}>
+          <h2 style={{fontSize:18}}>{player ? 'Spieler bearbeiten' : 'Neuer Spieler'}</h2>
+          <StarRating value={form.rating} onChange={v => set('rating', v)} />
+        </div>
+
+        <label className="field-label">Name</label>
+        <input className="input" value={form.name} onChange={e=>set('name', e.target.value)} placeholder="Max Mustermann" />
+
+        <label className="field-label">Position</label>
+        <select className="input" value={form.position} onChange={e=>set('position', e.target.value)}>
+          {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
+        </select>
+
+        <div className="row">
+          <div>
+            <label className="field-label">Rückennummer</label>
+            <input className="input" type="number" value={form.trikotnummer} onChange={e=>set('trikotnummer', e.target.value)} placeholder="9" />
+          </div>
+          <div>
+            <label className="field-label">Alter</label>
+            <input className="input" type="number" value={form.alter} onChange={e=>set('alter', e.target.value)} placeholder="24" />
+          </div>
+        </div>
+
+        <div className="row">
+          <div>
+            <label className="field-label">Marktwert (€)</label>
+            <input className="input" type="number" value={form.marktwert} onChange={e=>set('marktwert', e.target.value)} placeholder="5000000" />
+          </div>
+          <div>
+            <label className="field-label">Verein</label>
+            <input className="input" value={form.verein} onChange={e=>set('verein', e.target.value)} placeholder="FC Beispiel" />
+          </div>
+        </div>
+
+        <label className="field-label">Notizen (Formstand, Verletzungshistorie...)</label>
+        <textarea className="input" value={form.notes} onChange={e=>set('notes', e.target.value)} placeholder="z.B. Starke Chancenverwertung, aktuell verletzt"></textarea>
+
+        <div className="modal-actions">
+          <button className="btn secondary" onClick={onClose}>Abbrechen</button>
+          {player && <button className="btn danger" onClick={() => { onDelete(form.id); onClose(); }}>Löschen</button>}
+          <button className="btn" onClick={() => { if(!form.name.trim()){alert('Bitte Namen eingeben');return;} onSave(form); onClose(); }}>Speichern</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PlayerCard({ player, onClick }) {
+  return (
+    <div className="player-card" onClick={onClick}>
+      <StarRating value={player.rating} size="small" />
+      <div className="player-photo">👤</div>
+      <span className="badge">{player.position}</span>
+      <div className="player-name">{player.name}</div>
+      <div className="player-sub">
+        {player.trikotnummer ? `#${player.trikotnummer}` : ''} {player.verein ? '· ' + player.verein : ''}
+      </div>
+      {player.marktwert && <div className="player-sub">💰 {Number(player.marktwert).toLocaleString('de-DE')} €</div>}
+    </div>
+  );
+}
+
+function KaderTab({ players, setPlayers }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+
+  const savePlayer = (p) => {
+    setPlayers(prev => {
+      const exists = prev.find(x => x.id === p.id);
+      const next = exists ? prev.map(x => x.id === p.id ? p : x) : [...prev, p];
+      return next;
+    });
+  };
+  const deletePlayer = (id) => setPlayers(prev => prev.filter(p => p.id !== id));
+
+  return (
+    <div>
+      <div className="top-actions">
+        <h2 className="section-title" style={{marginBottom:0}}>Kader ({players.length})</h2>
+        <button className="btn" onClick={() => { setEditing(null); setModalOpen(true); }}>+ Spieler hinzufügen</button>
+      </div>
+      {players.length === 0 ? (
+        <div className="empty-state">Noch keine Spieler im Kader. Füge deinen ersten Spieler hinzu!</div>
+      ) : (
+        <div className="card-grid">
+          {players.map(p => (
+            <PlayerCard key={p.id} player={p} onClick={() => { setEditing(p); setModalOpen(true); }} />
+          ))}
+        </div>
+      )}
+      {modalOpen && (
+        <PlayerModal
+          player={editing}
+          onSave={savePlayer}
+          onDelete={deletePlayer}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function FieldSlot({ slot, player, onDrop, onDragStart, onClickEmpty }) {
+  const [over, setOver] = useState(false);
+  return (
+    <div
+      className={"field-slot" + (over ? " dragover" : "")}
+      style={{ left: slot.x + '%', top: slot.y + '%' }}
+      onDragOver={e => { e.preventDefault(); setOver(true); }}
+      onDragLeave={() => setOver(false)}
+      onDrop={e => { e.preventDefault(); setOver(false); onDrop(slot.slotId); }}
+    >
+      <div
+        className={"slot-circle" + (!player ? " slot-empty" : "")}
+        draggable={!!player}
+        onDragStart={() => player && onDragStart({ type: 'field', slotId: slot.slotId, playerId: player.id })}
+      >
+        {player ? '👤' : '+'}
+      </div>
+      {player && <div className="slot-name">{player.name.split(' ').pop()}</div>}
+      {!player && <div className="slot-name" style={{opacity:0.6}}>{slot.pos}</div>}
+    </div>
+  );
+}
+
+function AufstellungTab({ players, lineup, setLineup }) {
+  const [dragData, setDragData] = useState(null);
+
+  const formation = FORMATIONS[lineup.formation];
+
+  const setFormationType = (key) => {
+    setLineup(l => ({ ...l, formation: key, startingXI: {} }));
+  };
+
+  const getPlayer = (id) => players.find(p => p.id === id);
+
+  const benchPlayers = players.filter(p => !Object.values(lineup.startingXI).includes(p.id));
+
+  const handleDropOnSlot = (slotId) => {
+    if (!dragData) return;
+    setLineup(l => {
+      const xi = { ...l.startingXI };
+      if (dragData.type === 'bench') {
+        // remove player from any existing slot
+        Object.keys(xi).forEach(k => { if (xi[k] === dragData.playerId) delete xi[k]; });
+        const displaced = xi[slotId];
+        xi[slotId] = dragData.playerId;
+        return { ...l, startingXI: xi };
+      } else if (dragData.type === 'field') {
+        const fromSlot = dragData.slotId;
+        const displaced = xi[slotId];
+        xi[slotId] = xi[fromSlot];
+        if (displaced) xi[fromSlot] = displaced; else delete xi[fromSlot];
+        return { ...l, startingXI: xi };
+      }
+      return l;
+    });
+    setDragData(null);
+  };
+
+  const handleDropOnBench = () => {
+    if (!dragData) return;
+    if (dragData.type === 'field') {
+      setLineup(l => {
+        const xi = { ...l.startingXI };
+        delete xi[dragData.slotId];
+        return { ...l, startingXI: xi };
+      });
+    }
+    setDragData(null);
+  };
+
+  return (
+    <div>
+      <h2 className="section-title">Aufstellung</h2>
+      <div className="formation-select">
+        {Object.keys(FORMATIONS).map(f => (
+          <div key={f} className={"formation-btn" + (lineup.formation === f ? " active" : "")}
+            onClick={() => setFormationType(f)}>{f}</div>
+        ))}
+      </div>
+
+      <div className="field-wrap">
+        <div className="field-lines"></div>
+        <div className="center-circle"></div>
+        <div className="penalty-top"></div>
+        <div className="penalty-bottom"></div>
+        {formation.map((slot, i) => {
+          const slotId = 'slot' + i;
+          const playerId = lineup.startingXI[slotId];
+          const player = playerId ? getPlayer(playerId) : null;
+          return (
+            <FieldSlot
+              key={slotId}
+              slot={{ ...slot, slotId }}
+              player={player}
+              onDrop={handleDropOnSlot}
+              onDragStart={setDragData}
+            />
+          );
+        })}
+      </div>
+
+      <div className="bench-wrap" onDragOver={e => e.preventDefault()} onDrop={handleDropOnBench}>
+        <div className="bench-title">Bank ({benchPlayers.length} Spieler)</div>
+        {benchPlayers.length === 0 ? (
+          <div style={{fontSize:13, color:'#6b7280'}}>Keine Spieler auf der Bank</div>
+        ) : (
+          <div className="bench-list">
+            {benchPlayers.map(p => (
+              <div key={p.id} className="bench-player" draggable
+                onDragStart={() => setDragData({ type: 'bench', playerId: p.id })}>
+                <div style={{fontSize:22}}>👤</div>
+                <div style={{fontSize:10, fontWeight:700, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{p.name}</div>
+                <div style={{fontSize:9, color:'#9ca3af'}}>{p.position}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function TaktikTab({ lineup, setLineup }) {
+  return (
+    <div>
+      <h2 className="section-title">Taktik</h2>
+      <label className="field-label">Spielidee</label>
+      <textarea className="input" style={{minHeight:90}}
+        value={lineup.tacticNotes?.idee || ''}
+        onChange={e => setLineup(l => ({...l, tacticNotes: {...l.tacticNotes, idee: e.target.value}}))}
+        placeholder="z.B. Hohes Pressing, schnelle Umschaltmomente..." />
+
+      <label className="field-label">Pressing-Verhalten</label>
+      <textarea className="input" style={{minHeight:90}}
+        value={lineup.tacticNotes?.pressing || ''}
+        onChange={e => setLineup(l => ({...l, tacticNotes: {...l.tacticNotes, pressing: e.target.value}}))}
+        placeholder="z.B. Ab welcher Zone wird gepresst..." />
+
+      <label className="field-label">Sonstige Anmerkungen</label>
+      <textarea className="input" style={{minHeight:90}}
+        value={lineup.tacticNotes?.sonstiges || ''}
+        onChange={e => setLineup(l => ({...l, tacticNotes: {...l.tacticNotes, sonstiges: e.target.value}}))}
+        placeholder="Standardsituationen, Sonderaufgaben..." />
+
+      <div style={{marginTop:16, padding:14, background:'#161b22', borderRadius:14, border:'1px solid #263447'}}>
+        <div style={{fontSize:13, color:'#9ca3af'}}>💡 Tipp: Die Taktiknotizen werden zusammen mit der aktuellen Aufstellung gespeichert (Tab "Gespeichert").</div>
+      </div>
+    </div>
+  );
+}
+
+function GespeichertTab({ lineup, setLineup, savedLineups, setSavedLineups, players }) {
+  const [name, setName] = useState('');
+
+  const saveCurrent = () => {
+    if (!name.trim()) { alert('Bitte einen Namen für die Aufstellung eingeben'); return; }
+    const entry = {
+      formationId: uid(),
+      name: name.trim(),
+      formation: lineup.formation,
+      startingXI: lineup.startingXI,
+      tacticNotes: lineup.tacticNotes
+    };
+    setSavedLineups(prev => [...prev, entry]);
+    setName('');
+  };
+
+  const loadLineup = (entry) => {
+    setLineup({ formation: entry.formation, startingXI: entry.startingXI, tacticNotes: entry.tacticNotes });
+    alert('Aufstellung "' + entry.name + '" geladen. Wechsle zum Tab "Aufstellung" um sie zu sehen.');
+  };
+
+  const deleteLineup = (id) => {
+    setSavedLineups(prev => prev.filter(l => l.formationId !== id));
+  };
+
+  const overwriteLineup = (id) => {
+    setSavedLineups(prev => prev.map(l => l.formationId === id ? {
+      ...l, formation: lineup.formation, startingXI: lineup.startingXI, tacticNotes: lineup.tacticNotes
+    } : l));
+    alert('Überschrieben!');
+  };
+
+  return (
+    <div>
+      <h2 className="section-title">Aufstellungen speichern</h2>
+      <div className="row" style={{marginBottom:20}}>
+        <input className="input" style={{marginBottom:0}} placeholder='z.B. "Heimspiel vs. Bayern"'
+          value={name} onChange={e=>setName(e.target.value)} />
+        <button className="btn" style={{flex:'0 0 auto'}} onClick={saveCurrent}>Speichern</button>
+      </div>
+
+      <h3 style={{fontSize:14, color:'#9ca3af', marginBottom:10}}>Gespeicherte Aufstellungen ({savedLineups.length})</h3>
+      {savedLineups.length === 0 ? (
+        <div className="empty-state">Noch keine Aufstellungen gespeichert.</div>
+      ) : savedLineups.map(entry => (
+        <div key={entry.formationId} className="saved-lineup-card">
+          <div>
+            <div style={{fontWeight:700, fontSize:14}}>{entry.name}</div>
+            <div style={{fontSize:12, color:'#9ca3af'}}>{entry.formation} · {Object.keys(entry.startingXI || {}).length} Spieler aufgestellt</div>
+          </div>
+          <div style={{display:'flex', gap:6, flexWrap:'wrap'}}>
+            <button className="btn small" onClick={() => loadLineup(entry)}>Laden</button>
+            <button className="btn small secondary" onClick={() => overwriteLineup(entry.formationId)}>Überschreiben</button>
+            <button className="btn small danger" onClick={() => deleteLineup(entry.formationId)}>Löschen</button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function App() {
+  const [tab, setTab] = useState('kader');
+  const [players, setPlayers] = useState(() => loadLS('players', []));
+  const [lineup, setLineup] = useState(() => loadLS('currentLineup', {
+    formation: '4-4-2', startingXI: {}, tacticNotes: { idee:'', pressing:'', sonstiges:'' }
+  }));
+  const [savedLineups, setSavedLineups] = useState(() => loadLS('savedLineups', []));
+
+  useEffect(() => saveLS('players', players), [players]);
+  useEffect(() => saveLS('currentLineup', lineup), [lineup]);
+  useEffect(() => saveLS('savedLineups', savedLineups), [savedLineups]);
+
+  const tabs = [
+    { key: 'kader', label: 'Kader' },
+    { key: 'aufstellung', label: 'Aufstellung' },
+    { key: 'taktik', label: 'Taktik' },
+    { key: 'gespeichert', label: 'Gespeichert' },
+  ];
+
+  return (
+    <div className="app">
+      <div className="header">
+        <span style={{fontSize:26}}>⚽</span>
+        <h1>Kader-Manager</h1>
+      </div>
+
+      <div className="tabs">
+        {tabs.map(t => (
+          <div key={t.key} className={"tab" + (tab === t.key ? " active" : "")} onClick={() => setTab(t.key)}>
+            {t.label}
+          </div>
+        ))}
+      </div>
+
+      {tab === 'kader' && <KaderTab players={players} setPlayers={setPlayers} />}
+      {tab === 'aufstellung' && <AufstellungTab players={players} lineup={lineup} setLineup={setLineup} />}
+      {tab === 'taktik' && <TaktikTab lineup={lineup} setLineup={setLineup} />}
+      {tab === 'gespeichert' && (
+        <GespeichertTab
+          lineup={lineup} setLineup={setLineup}
+          savedLineups={savedLineups} setSavedLineups={setSavedLineups}
+          players={players}
+        />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

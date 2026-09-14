@@ -2,654 +2,812 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kader-Manager</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Kickbase Kader Manager</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
   body {
-    background: linear-gradient(135deg, #0d1117 0%, #0f2027 100%);
-    color: #e6edf3;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #0a1929 0%, #0d2137 100%);
+    color: #fff;
     min-height: 100vh;
+    padding-bottom: 40px;
   }
-  #root { min-height: 100vh; }
-
-  .app { max-width: 1200px; margin: 0 auto; padding: 16px; }
-
-  .header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 16px 0; margin-bottom: 16px;
+  header {
+    background: #0f2942;
+    padding: 16px 20px;
+    text-align: center;
+    border-bottom: 2px solid #1e8e5a;
+    position: sticky; top: 0; z-index: 100;
   }
-  .header h1 {
-    font-size: 22px;
-    background: linear-gradient(90deg, #22c55e, #3b82f6);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
+  header h1 { font-size: 20px; color: #2ecc71; letter-spacing: 1px; }
 
   .tabs {
-    display: flex; gap: 4px; background: #161b22;
-    border-radius: 12px; padding: 4px; margin-bottom: 20px;
+    display: flex;
+    background: #0f2942;
+    position: sticky; top: 57px; z-index: 99;
     overflow-x: auto;
+    border-bottom: 1px solid #1a3a5c;
   }
   .tab {
-    flex: 1; padding: 10px 12px; text-align: center;
-    border-radius: 10px; cursor: pointer; font-weight: 600;
-    font-size: 14px; color: #9ca3af; white-space: nowrap;
-    transition: all 0.2s;
+    flex: 1;
+    text-align: center;
+    padding: 14px 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #7f9cb5;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
   }
   .tab.active {
-    background: linear-gradient(90deg, #16a34a, #15803d);
-    color: white;
+    color: #2ecc71;
+    border-bottom: 3px solid #2ecc71;
+    background: #12324e;
   }
 
+  .view { display: none; padding: 16px; }
+  .view.active { display: block; }
+
+  /* Buttons */
   .btn {
-    background: linear-gradient(90deg, #22c55e, #16a34a);
-    color: white; border: none; padding: 10px 16px;
-    border-radius: 10px; font-weight: 600; cursor: pointer;
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: #fff;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: 600;
     font-size: 14px;
+    cursor: pointer;
   }
-  .btn:active { opacity: 0.8; }
   .btn.secondary {
-    background: #1f2937; color: #e6edf3; border: 1px solid #374151;
+    background: #1a3a5c;
   }
   .btn.danger {
-    background: #7f1d1d; color: white;
+    background: #c0392b;
   }
-  .btn.small { padding: 6px 10px; font-size: 12px; }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
 
-  .card-grid {
+  /* Player cards grid */
+  .player-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 14px;
   }
-
   .player-card {
-    background: linear-gradient(160deg, #1e293b, #0f172a);
-    border: 1px solid #263447;
+    background: linear-gradient(145deg, #12324e, #0d2137);
     border-radius: 16px;
-    padding: 12px;
+    padding: 14px;
     position: relative;
-    cursor: pointer;
-    transition: transform 0.15s;
+    border: 1px solid #1e4a6e;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
   }
-  .player-card:active { transform: scale(0.97); }
-
-  .player-photo {
-    width: 100%; aspect-ratio: 1;
-    background: #263447;
+  .player-card .photo {
+    width: 60px; height: 60px;
     border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 32px; color: #4b5563;
-    margin-bottom: 8px;
-    border: 2px solid #16a34a;
+    background: #1e4a6e;
+    display: flex; align-items:center; justify-content:center;
+    margin: 0 auto 8px;
+    font-size: 24px;
+    color: #7f9cb5;
+    border: 2px solid #2ecc71;
   }
-
+  .player-card .name {
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
   .badge {
     display: inline-block;
-    background: #16a34a;
-    color: white;
+    background: #1e8e5a;
+    color: #fff;
     font-size: 10px;
-    font-weight: 700;
     padding: 3px 8px;
-    border-radius: 6px;
-    margin-bottom: 6px;
+    border-radius: 20px;
+    margin: 0 auto;
+    display: block;
+    width: fit-content;
+    text-align:center;
+  }
+  .stars {
+    text-align: center;
+    margin: 8px 0 4px;
+    font-size: 16px;
+    letter-spacing: 2px;
+  }
+  .star { color: #445; cursor: pointer; }
+  .star.filled { color: #f1c40f; }
+  .card-actions {
+    display:flex; gap:6px; margin-top:10px;
+  }
+  .card-actions button {
+    flex:1;
+    padding: 8px;
+    font-size: 11px;
+    border-radius: 8px;
+    border:none;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .num-badge {
+    position:absolute; top:10px; left:10px;
+    background:#0d2137; border:1px solid #2ecc71;
+    color:#2ecc71; font-size:11px; font-weight:700;
+    width:22px; height:22px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
   }
 
-  .stars-small { font-size: 12px; color: #fbbf24; position: absolute; top: 10px; right: 10px; }
-
-  .player-name { font-weight: 700; font-size: 14px; margin-bottom: 2px; }
-  .player-sub { font-size: 11px; color: #9ca3af; }
-
+  /* Modal */
   .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    display: flex; align-items: flex-end; justify-content: center;
-    z-index: 100;
+    display:none;
+    position:fixed; top:0; left:0; right:0; bottom:0;
+    background:rgba(0,0,0,0.7);
+    z-index:1000;
+    align-items:center; justify-content:center;
+    padding: 20px;
   }
+  .modal-overlay.active { display:flex; }
   .modal {
-    background: #161b22; border-radius: 20px 20px 0 0;
-    padding: 20px; width: 100%; max-width: 500px;
-    max-height: 90vh; overflow-y: auto;
-    border: 1px solid #263447;
+    background:#0f2942;
+    border-radius:16px;
+    padding:20px;
+    width:100%;
+    max-width:420px;
+    max-height:85vh;
+    overflow-y:auto;
+    border:1px solid #2ecc71;
   }
-  @media (min-width: 600px) {
-    .modal-overlay { align-items: center; }
-    .modal { border-radius: 20px; }
+  .modal h2 { color:#2ecc71; margin-bottom:16px; font-size:18px; }
+  .field { margin-bottom:14px; }
+  .field label {
+    display:block; font-size:12px; color:#7f9cb5; margin-bottom:6px;
+    font-weight:600; text-transform:uppercase;
+  }
+  .field input, .field select, .field textarea {
+    width:100%;
+    padding:10px;
+    border-radius:8px;
+    border:1px solid #1e4a6e;
+    background:#12324e;
+    color:#fff;
+    font-size:14px;
+  }
+  .field textarea { min-height:80px; resize:vertical; font-family:inherit; }
+  .modal-actions { display:flex; gap:10px; margin-top:16px; }
+  .modal-actions button { flex:1; }
+
+  .star-picker { font-size:28px; text-align:center; margin: 6px 0; }
+  .star-picker span { cursor:pointer; color:#445; padding: 0 2px; }
+  .star-picker span.filled { color:#f1c40f; }
+
+  /* Field view */
+  .formation-select {
+    display:flex; gap:8px; margin-bottom:14px; overflow-x:auto;
+  }
+  .formation-select button {
+    padding:8px 14px; border-radius:8px; border:1px solid #1e4a6e;
+    background:#12324e; color:#7f9cb5; font-weight:600; font-size:13px;
+    white-space:nowrap; cursor:pointer;
+  }
+  .formation-select button.active {
+    background:#2ecc71; color:#0a1929; border-color:#2ecc71;
   }
 
-  .field-label { font-size: 12px; color: #9ca3af; margin-bottom: 4px; display: block; font-weight: 600; }
-  .input, select, textarea {
-    width: 100%; background: #0d1117; border: 1px solid #263447;
-    color: #e6edf3; padding: 10px 12px; border-radius: 10px;
-    font-size: 14px; margin-bottom: 14px;
-  }
-  textarea { resize: vertical; min-height: 70px; font-family: inherit; }
-
-  .stars-input { font-size: 28px; margin-bottom: 14px; }
-  .star { cursor: pointer; color: #374151; }
-  .star.filled { color: #fbbf24; }
-
-  .modal-actions { display: flex; gap: 10px; margin-top: 10px; }
-  .modal-actions .btn { flex: 1; }
-
-  .field-wrap {
-    background: linear-gradient(180deg, #14532d, #166534);
+  .field-container {
+    background: linear-gradient(180deg, #1a5c33, #0f3d21);
     border-radius: 16px;
-    padding: 12px;
-    aspect-ratio: 3/4.2;
     position: relative;
+    width: 100%;
+    aspect-ratio: 3/4.2;
+    margin-bottom: 20px;
     overflow: hidden;
-    border: 2px solid #22c55e33;
+    border: 3px solid #2ecc71;
   }
   .field-lines {
-    position: absolute; inset: 8px;
-    border: 2px solid rgba(255,255,255,0.35);
-    border-radius: 8px;
+    position:absolute; inset:0;
   }
   .field-lines::before {
-    content: ''; position: absolute; left: 50%; top: 0; bottom: 0;
-    width: 2px; background: rgba(255,255,255,0.35); transform: translateX(-50%);
+    content:'';
+    position:absolute;
+    top:50%; left:5%; right:5%;
+    height:1px; background: rgba(255,255,255,0.3);
   }
-  .center-circle {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    width: 22%; aspect-ratio: 1; border: 2px solid rgba(255,255,255,0.35);
-    border-radius: 50%;
+  .field-lines::after {
+    content:'';
+    position:absolute;
+    top:50%; left:50%;
+    width:60px; height:60px;
+    border:1px solid rgba(255,255,255,0.3);
+    border-radius:50%;
+    transform:translate(-50%,-50%);
   }
-  .penalty-top, .penalty-bottom {
-    position: absolute; left: 50%; transform: translateX(-50%);
-    width: 44%; height: 12%; border: 2px solid rgba(255,255,255,0.35); border-top: none;
+  .pos-slot {
+    position:absolute;
+    width:70px;
+    transform: translate(-50%, -50%);
+    text-align:center;
+    cursor:pointer;
   }
-  .penalty-top { top: 8px; border-top: none; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; transform: translateX(-50%) rotate(180deg); }
-  .penalty-bottom { bottom: 8px; border-radius: 0 0 4px 4px; }
+  .pos-slot .circle {
+    width:52px; height:52px;
+    border-radius:50%;
+    background: rgba(15,41,66,0.9);
+    border:2px dashed #2ecc71;
+    display:flex; align-items:center; justify-content:center;
+    margin: 0 auto 2px;
+    font-size:20px;
+    color:#7f9cb5;
+  }
+  .pos-slot.filled .circle {
+    border-style: solid;
+    background: linear-gradient(145deg, #2ecc71, #1e8e5a);
+    color:#0a1929;
+    font-weight:800;
+    font-size:16px;
+  }
+  .pos-slot.selected .circle {
+    box-shadow: 0 0 0 4px rgba(241,196,15,0.6);
+  }
+  .pos-slot .label {
+    font-size:10px;
+    background:rgba(0,0,0,0.6);
+    padding:2px 4px;
+    border-radius:4px;
+    display:inline-block;
+    max-width:70px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
 
-  .field-slot {
-    position: absolute; transform: translate(-50%, -50%);
-    width: 60px; text-align: center; cursor: grab;
+  .bench-section {
+    background:#0f2942;
+    border-radius:14px;
+    padding:14px;
+    border:1px solid #1e4a6e;
   }
-  .field-slot.dragover .slot-circle { box-shadow: 0 0 0 3px #22c55e; }
-  .slot-circle {
-    width: 46px; height: 46px; border-radius: 50%;
-    background: #1e293b; border: 2px solid #16a34a;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px; margin: 0 auto 2px;
+  .bench-section h3 { color:#7f9cb5; font-size:13px; margin-bottom:10px; text-transform:uppercase; }
+  .bench-list {
+    display:flex; gap:10px; overflow-x:auto; padding-bottom:6px;
   }
-  .slot-empty { background: rgba(255,255,255,0.08); border: 2px dashed rgba(255,255,255,0.3); }
-  .slot-name {
-    font-size: 10px; font-weight: 700; background: rgba(0,0,0,0.6);
-    padding: 2px 4px; border-radius: 4px; white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis; max-width: 62px; margin: 0 auto;
-  }
-
-  .bench-wrap {
-    margin-top: 16px; background: #161b22; border-radius: 14px; padding: 12px;
-    border: 1px solid #263447;
-  }
-  .bench-title { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: #9ca3af; }
-  .bench-list { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
   .bench-player {
-    flex-shrink: 0; width: 70px; text-align: center; cursor: grab;
-    background: #0d1117; border-radius: 10px; padding: 8px 4px;
-    border: 1px solid #263447;
+    min-width:80px;
+    background:#12324e;
+    border-radius:10px;
+    padding:8px;
+    text-align:center;
+    border:2px solid transparent;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .bench-player.selected {
+    border-color:#f1c40f;
+    box-shadow:0 0 10px rgba(241,196,15,0.4);
+  }
+  .bench-player .mini-photo {
+    width:36px;height:36px;border-radius:50%;
+    background:#1e4a6e;margin:0 auto 4px;
+    display:flex;align-items:center;justify-content:center;
+    color:#7f9cb5; font-size:14px;
+  }
+  .bench-player .mini-name { font-size:11px; font-weight:600; }
+
+  .hint-box {
+    background:#12324e;
+    border-left:4px solid #f1c40f;
+    padding:10px 14px;
+    border-radius:8px;
+    font-size:13px;
+    color:#f1c40f;
+    margin-bottom:14px;
+    display:none;
+  }
+  .hint-box.active { display:block; }
+
+  /* Saved formations */
+  .saved-list { display:flex; flex-direction:column; gap:10px; }
+  .saved-item {
+    background:#12324e;
+    border-radius:12px;
+    padding:14px;
+    border:1px solid #1e4a6e;
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:10px;
+  }
+  .saved-item .info strong { color:#2ecc71; display:block; margin-bottom:4px; }
+  .saved-item .info span { font-size:12px; color:#7f9cb5; }
+  .saved-item .actions { display:flex; gap:6px; }
+  .saved-item .actions button {
+    padding:6px 10px; font-size:11px; border-radius:6px; border:none; font-weight:600;
   }
 
-  .formation-select { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; }
-  .formation-btn {
-    flex-shrink: 0; padding: 8px 14px; border-radius: 10px;
-    background: #1f2937; border: 1px solid #374151; color: #e6edf3;
-    font-size: 13px; font-weight: 600; cursor: pointer;
-  }
-  .formation-btn.active { background: #16a34a; border-color: #16a34a; }
-
-  .saved-lineup-card {
-    background: #161b22; border: 1px solid #263447; border-radius: 14px;
-    padding: 14px; margin-bottom: 10px;
-    display: flex; justify-content: space-between; align-items: center; gap: 10px;
-  }
   .empty-state {
-    text-align: center; padding: 40px 20px; color: #6b7280;
+    text-align:center;
+    color:#7f9cb5;
+    padding:40px 20px;
+    font-size:14px;
   }
-  .section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
-  .row { display: flex; gap: 10px; }
-  .row > * { flex: 1; }
-  .top-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 10px; flex-wrap: wrap; }
+
+  textarea.tactics {
+    width:100%;
+    min-height:120px;
+    padding:14px;
+    border-radius:12px;
+    background:#12324e;
+    border:1px solid #1e4a6e;
+    color:#fff;
+    font-family:inherit;
+    font-size:14px;
+    resize:vertical;
+    margin-bottom:16px;
+  }
+
+  h3.section-title {
+    color:#2ecc71;
+    font-size:14px;
+    margin-bottom:10px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+  }
 </style>
 </head>
 <body>
-<div id="root"></div>
 
-<script type="text/babel">
-const { useState, useEffect, useRef } = React;
+<header><h1>⚽ KADER MANAGER</h1></header>
 
-const POSITIONS = ["Torwart", "Innenverteidiger", "Außenverteidiger", "Defensives Mittelfeld", "Zentrales Mittelfeld", "Offensives Mittelfeld", "Flügel", "Stürmer"];
+<div class="tabs">
+  <div class="tab active" data-tab="kader">Kader</div>
+  <div class="tab" data-tab="aufstellung">Aufstellung</div>
+  <div class="tab" data-tab="taktik">Taktik</div>
+  <div class="tab" data-tab="gespeichert">Gespeichert</div>
+</div>
+
+<!-- KADER VIEW -->
+<div class="view active" id="view-kader">
+  <div class="btn-row">
+    <button class="btn" onclick="openPlayerModal()">+ Spieler hinzufügen</button>
+  </div>
+  <div class="player-grid" id="playerGrid"></div>
+</div>
+
+<!-- AUFSTELLUNG VIEW -->
+<div class="view" id="view-aufstellung">
+  <div class="formation-select" id="formationSelect"></div>
+  <div class="hint-box" id="hintBox">Spieler auf der Bank antippen, dann Position im Feld antippen ✅</div>
+  <div class="field-container" id="fieldContainer">
+    <div class="field-lines"></div>
+  </div>
+  <div class="bench-section">
+    <h3>Bank</h3>
+    <div class="bench-list" id="benchList"></div>
+  </div>
+  <div class="btn-row" style="margin-top:16px;">
+    <button class="btn" onclick="openSaveFormationModal()">💾 Aufstellung speichern</button>
+    <button class="btn secondary" onclick="resetFormation()">🔄 Zurücksetzen</button>
+  </div>
+</div>
+
+<!-- TAKTIK VIEW -->
+<div class="view" id="view-taktik">
+  <h3 class="section-title">Spielidee</h3>
+  <textarea class="tactics" id="tacticIdea" placeholder="z.B. Hohes Pressing, schnelle Umschaltmomente..."></textarea>
+  <h3 class="section-title">Pressing-Verhalten</h3>
+  <textarea class="tactics" id="tacticPressing" placeholder="z.B. Gegenpressing sofort nach Ballverlust..."></textarea>
+  <div class="btn-row">
+    <button class="btn" onclick="saveTactics()">💾 Taktik speichern</button>
+  </div>
+</div>
+
+<!-- GESPEICHERT VIEW -->
+<div class="view" id="view-gespeichert">
+  <h3 class="section-title">Gespeicherte Aufstellungen</h3>
+  <div class="saved-list" id="savedList"></div>
+</div>
+
+<!-- PLAYER MODAL -->
+<div class="modal-overlay" id="playerModal">
+  <div class="modal">
+    <h2 id="playerModalTitle">Spieler hinzufügen</h2>
+    <input type="hidden" id="playerId">
+    <div class="field">
+      <label>Name</label>
+      <input type="text" id="playerName" placeholder="Max Mustermann">
+    </div>
+    <div class="field">
+      <label>Position</label>
+      <select id="playerPosition">
+        <option>Torwart</option>
+        <option>Innenverteidiger</option>
+        <option>Außenverteidiger</option>
+        <option>Defensives Mittelfeld</option>
+        <option>Zentrales Mittelfeld</option>
+        <option>Offensives Mittelfeld</option>
+        <option>Flügel</option>
+        <option>Stürmer</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Rückennummer</label>
+      <input type="number" id="playerNumber" placeholder="9">
+    </div>
+    <div class="field">
+      <label>Verein</label>
+      <input type="text" id="playerClub" placeholder="FC Beispiel">
+    </div>
+    <div class="field">
+      <label>Alter</label>
+      <input type="number" id="playerAge" placeholder="24">
+    </div>
+    <div class="field">
+      <label>Marktwert (€)</label>
+      <input type="number" id="playerValue" placeholder="5000000">
+    </div>
+    <div class="field">
+      <label>Bewertung</label>
+      <div class="star-picker" id="playerStars"></div>
+    </div>
+    <div class="field">
+      <label>Notizen</label>
+      <textarea id="playerNotes" placeholder="Formstand, Verletzungshistorie..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeModal('playerModal')">Abbrechen</button>
+      <button class="btn" onclick="savePlayer()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE FORMATION MODAL -->
+<div class="modal-overlay" id="saveFormationModal">
+  <div class="modal">
+    <h2>Aufstellung speichern</h2>
+    <div class="field">
+      <label>Name der Aufstellung</label>
+      <input type="text" id="formationName" placeholder="Heimspiel vs. Bayern">
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeModal('saveFormationModal')">Abbrechen</button>
+      <button class="btn" onclick="confirmSaveFormation()">Speichern</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ---------- DATA ----------
+let players = JSON.parse(localStorage.getItem('players') || '[]');
+let savedFormations = JSON.parse(localStorage.getItem('savedFormations') || '[]');
+let currentFormationType = localStorage.getItem('currentFormationType') || '4-4-2';
+let currentAssignment = JSON.parse(localStorage.getItem('currentAssignment') || '{}'); // slotId -> playerId
+let selectedBenchPlayer = null;
+let editingStarRating = 0;
 
 const FORMATIONS = {
-  "4-4-2": [
-    {x:50,y:92,pos:"Torwart"},
-    {x:15,y:75,pos:"Außenverteidiger"},{x:38,y:78,pos:"Innenverteidiger"},{x:62,y:78,pos:"Innenverteidiger"},{x:85,y:75,pos:"Außenverteidiger"},
-    {x:15,y:50,pos:"Flügel"},{x:38,y:52,pos:"Zentrales Mittelfeld"},{x:62,y:52,pos:"Zentrales Mittelfeld"},{x:85,y:50,pos:"Flügel"},
-    {x:35,y:22,pos:"Stürmer"},{x:65,y:22,pos:"Stürmer"}
+  '4-4-2': [
+    {id:'gk', label:'TW', x:50, y:92},
+    {id:'d1', label:'AV', x:15, y:75}, {id:'d2', label:'IV', x:37, y:78}, {id:'d3', label:'IV', x:63, y:78}, {id:'d4', label:'AV', x:85, y:75},
+    {id:'m1', label:'ZM', x:15, y:50}, {id:'m2', label:'ZM', x:37, y:52}, {id:'m3', label:'ZM', x:63, y:52}, {id:'m4', label:'ZM', x:85, y:50},
+    {id:'f1', label:'ST', x:35, y:20}, {id:'f2', label:'ST', x:65, y:20}
   ],
-  "4-3-3": [
-    {x:50,y:92,pos:"Torwart"},
-    {x:15,y:75,pos:"Außenverteidiger"},{x:38,y:78,pos:"Innenverteidiger"},{x:62,y:78,pos:"Innenverteidiger"},{x:85,y:75,pos:"Außenverteidiger"},
-    {x:30,y:55,pos:"Zentrales Mittelfeld"},{x:50,y:60,pos:"Defensives Mittelfeld"},{x:70,y:55,pos:"Zentrales Mittelfeld"},
-    {x:20,y:25,pos:"Flügel"},{x:50,y:18,pos:"Stürmer"},{x:80,y:25,pos:"Flügel"}
+  '4-3-3': [
+    {id:'gk', label:'TW', x:50, y:92},
+    {id:'d1', label:'AV', x:15, y:75}, {id:'d2', label:'IV', x:37, y:78}, {id:'d3', label:'IV', x:63, y:78}, {id:'d4', label:'AV', x:85, y:75},
+    {id:'m1', label:'ZM', x:25, y:52}, {id:'m2', label:'ZM', x:50, y:55}, {id:'m3', label:'ZM', x:75, y:52},
+    {id:'f1', label:'FL', x:15, y:22}, {id:'f2', label:'ST', x:50, y:15}, {id:'f3', label:'FL', x:85, y:22}
   ],
-  "3-5-2": [
-    {x:50,y:92,pos:"Torwart"},
-    {x:28,y:78,pos:"Innenverteidiger"},{x:50,y:80,pos:"Innenverteidiger"},{x:72,y:78,pos:"Innenverteidiger"},
-    {x:12,y:55,pos:"Flügel"},{x:32,y:58,pos:"Zentrales Mittelfeld"},{x:50,y:62,pos:"Defensives Mittelfeld"},{x:68,y:58,pos:"Zentrales Mittelfeld"},{x:88,y:55,pos:"Flügel"},
-    {x:35,y:22,pos:"Stürmer"},{x:65,y:22,pos:"Stürmer"}
-  ],
-  "4-2-3-1": [
-    {x:50,y:92,pos:"Torwart"},
-    {x:15,y:75,pos:"Außenverteidiger"},{x:38,y:78,pos:"Innenverteidiger"},{x:62,y:78,pos:"Innenverteidiger"},{x:85,y:75,pos:"Außenverteidiger"},
-    {x:35,y:62,pos:"Defensives Mittelfeld"},{x:65,y:62,pos:"Defensives Mittelfeld"},
-    {x:18,y:38,pos:"Flügel"},{x:50,y:40,pos:"Offensives Mittelfeld"},{x:82,y:38,pos:"Flügel"},
-    {x:50,y:15,pos:"Stürmer"}
+  '3-5-2': [
+    {id:'gk', label:'TW', x:50, y:92},
+    {id:'d1', label:'IV', x:25, y:78}, {id:'d2', label:'IV', x:50, y:80}, {id:'d3', label:'IV', x:75, y:78},
+    {id:'m1', label:'AV', x:10, y:55}, {id:'m2', label:'ZM', x:33, y:52}, {id:'m3', label:'ZM', x:50, y:56}, {id:'m4', label:'ZM', x:67, y:52}, {id:'m5', label:'AV', x:90, y:55},
+    {id:'f1', label:'ST', x:35, y:20}, {id:'f2', label:'ST', x:65, y:20}
   ]
 };
 
-function loadLS(key, fallback) {
-  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
-  catch(e) { return fallback; }
-}
-function saveLS(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
-function uid() { return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+// ---------- TABS ----------
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'aufstellung') renderField();
+    if (tab.dataset.tab === 'gespeichert') renderSavedList();
+  });
+});
 
-function StarRating({ value, onChange, size }) {
-  return (
-    <div className={size === 'small' ? 'stars-small' : 'stars-input'}>
-      {[1,2,3,4,5].map(n => (
-        <span key={n}
-          className={"star" + (n <= value ? " filled" : "")}
-          onClick={(e) => { e.stopPropagation(); onChange && onChange(n); }}
-          style={{cursor: onChange ? 'pointer' : 'default'}}
-        >★</span>
-      ))}
+function save() {
+  localStorage.setItem('players', JSON.stringify(players));
+  localStorage.setItem('savedFormations', JSON.stringify(savedFormations));
+  localStorage.setItem('currentFormationType', currentFormationType);
+  localStorage.setItem('currentAssignment', JSON.stringify(currentAssignment));
+}
+
+// ---------- PLAYER CRUD ----------
+function renderPlayerGrid() {
+  const grid = document.getElementById('playerGrid');
+  if (players.length === 0) {
+    grid.innerHTML = '<div class="empty-state">Noch keine Spieler im Kader.<br>Füge deinen ersten Spieler hinzu!</div>';
+    return;
+  }
+  grid.innerHTML = players.map(p => `
+    <div class="player-card">
+      ${p.number ? `<div class="num-badge">${p.number}</div>` : ''}
+      <div class="photo">👤</div>
+      <div class="name">${p.name}</div>
+      <div class="badge">${p.position}</div>
+      <div class="stars">${renderStarsDisplay(p.rating)}</div>
+      <div class="card-actions">
+        <button class="btn secondary" style="color:#fff" onclick="openPlayerModal('${p.id}')">Bearbeiten</button>
+        <button class="btn danger" style="color:#fff" onclick="deletePlayer('${p.id}')">Löschen</button>
+      </div>
     </div>
-  );
+  `).join('');
 }
 
-function PlayerModal({ player, onSave, onClose, onDelete }) {
-  const [form, setForm] = useState(player || {
-    id: uid(), name: '', position: POSITIONS[0], rating: 3, notes: '',
-    trikotnummer: '', marktwert: '', alter: '', verein: ''
+function renderStarsDisplay(rating) {
+  let s = '';
+  for (let i=1;i<=5;i++) s += `<span class="star ${i<=rating?'filled':''}">★</span>`;
+  return s;
+}
+
+function openPlayerModal(id) {
+  editingStarRating = 0;
+  document.getElementById('playerId').value = id || '';
+  if (id) {
+    const p = players.find(p => p.id === id);
+    document.getElementById('playerModalTitle').textContent = 'Spieler bearbeiten';
+    document.getElementById('playerName').value = p.name;
+    document.getElementById('playerPosition').value = p.position;
+    document.getElementById('playerNumber').value = p.number || '';
+    document.getElementById('playerClub').value = p.club || '';
+    document.getElementById('playerAge').value = p.age || '';
+    document.getElementById('playerValue').value = p.value || '';
+    document.getElementById('playerNotes').value = p.notes || '';
+    editingStarRating = p.rating || 0;
+  } else {
+    document.getElementById('playerModalTitle').textContent = 'Spieler hinzufügen';
+    document.getElementById('playerName').value = '';
+    document.getElementById('playerPosition').value = 'Torwart';
+    document.getElementById('playerNumber').value = '';
+    document.getElementById('playerClub').value = '';
+    document.getElementById('playerAge').value = '';
+    document.getElementById('playerValue').value = '';
+    document.getElementById('playerNotes').value = '';
+  }
+  renderStarPicker();
+  document.getElementById('playerModal').classList.add('active');
+}
+
+function renderStarPicker() {
+  const el = document.getElementById('playerStars');
+  el.innerHTML = '';
+  for (let i=1;i<=5;i++) {
+    const span = document.createElement('span');
+    span.textContent = '★';
+    span.className = i <= editingStarRating ? 'filled' : '';
+    span.onclick = () => { editingStarRating = i; renderStarPicker(); };
+    el.appendChild(span);
+  }
+}
+
+function savePlayer() {
+  const name = document.getElementById('playerName').value.trim();
+  if (!name) { alert('Bitte einen Namen eingeben.'); return; }
+  const id = document.getElementById('playerId').value;
+  const data = {
+    id: id || crypto.randomUUID(),
+    name,
+    position: document.getElementById('playerPosition').value,
+    number: document.getElementById('playerNumber').value,
+    club: document.getElementById('playerClub').value,
+    age: document.getElementById('playerAge').value,
+    value: document.getElementById('playerValue').value,
+    rating: editingStarRating,
+    notes: document.getElementById('playerNotes').value
+  };
+  if (id) {
+    const idx = players.findIndex(p => p.id === id);
+    players[idx] = data;
+  } else {
+    players.push(data);
+  }
+  save();
+  renderPlayerGrid();
+  closeModal('playerModal');
+}
+
+function deletePlayer(id) {
+  if (!confirm('Spieler wirklich löschen?')) return;
+  players = players.filter(p => p.id !== id);
+  // remove from field assignment too
+  Object.keys(currentAssignment).forEach(slot => {
+    if (currentAssignment[slot] === id) delete currentAssignment[slot];
+  });
+  save();
+  renderPlayerGrid();
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('active');
+}
+
+// ---------- FIELD / FORMATION ----------
+function renderFormationButtons() {
+  const el = document.getElementById('formationSelect');
+  el.innerHTML = Object.keys(FORMATIONS).map(f => `
+    <button class="${f === currentFormationType ? 'active' : ''}" onclick="switchFormation('${f}')">${f}</button>
+  `).join('');
+}
+
+function switchFormation(type) {
+  currentFormationType = type;
+  save();
+  renderFormationButtons();
+  renderField();
+}
+
+function renderField() {
+  renderFormationButtons();
+  const slots = FORMATIONS[currentFormationType];
+  const container = document.getElementById('fieldContainer');
+  container.innerHTML = '<div class="field-lines"></div>';
+
+  slots.forEach(slot => {
+    const playerId = currentAssignment[slot.id];
+    const player = playerId ? players.find(p => p.id === playerId) : null;
+    const div = document.createElement('div');
+    div.className = 'pos-slot' + (player ? ' filled' : '');
+    div.style.left = slot.x + '%';
+    div.style.top = slot.y + '%';
+    div.innerHTML = `
+      <div class="circle">${player ? getInitials(player.name) : slot.label}</div>
+      <div class="label">${player ? player.name : slot.label}</div>
+    `;
+    div.onclick = () => onSlotClick(slot.id, player);
+    container.appendChild(div);
   });
 
-  const set = (k,v) => setForm(f => ({...f, [k]: v}));
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={e => e.stopPropagation()}>
-        <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14}}>
-          <h2 style={{fontSize:18}}>{player ? 'Spieler bearbeiten' : 'Neuer Spieler'}</h2>
-          <StarRating value={form.rating} onChange={v => set('rating', v)} />
-        </div>
-
-        <label className="field-label">Name</label>
-        <input className="input" value={form.name} onChange={e=>set('name', e.target.value)} placeholder="Max Mustermann" />
-
-        <label className="field-label">Position</label>
-        <select className="input" value={form.position} onChange={e=>set('position', e.target.value)}>
-          {POSITIONS.map(p => <option key={p} value={p}>{p}</option>)}
-        </select>
-
-        <div className="row">
-          <div>
-            <label className="field-label">Rückennummer</label>
-            <input className="input" type="number" value={form.trikotnummer} onChange={e=>set('trikotnummer', e.target.value)} placeholder="9" />
-          </div>
-          <div>
-            <label className="field-label">Alter</label>
-            <input className="input" type="number" value={form.alter} onChange={e=>set('alter', e.target.value)} placeholder="24" />
-          </div>
-        </div>
-
-        <div className="row">
-          <div>
-            <label className="field-label">Marktwert (€)</label>
-            <input className="input" type="number" value={form.marktwert} onChange={e=>set('marktwert', e.target.value)} placeholder="5000000" />
-          </div>
-          <div>
-            <label className="field-label">Verein</label>
-            <input className="input" value={form.verein} onChange={e=>set('verein', e.target.value)} placeholder="FC Beispiel" />
-          </div>
-        </div>
-
-        <label className="field-label">Notizen (Formstand, Verletzungshistorie...)</label>
-        <textarea className="input" value={form.notes} onChange={e=>set('notes', e.target.value)} placeholder="z.B. Starke Chancenverwertung, aktuell verletzt"></textarea>
-
-        <div className="modal-actions">
-          <button className="btn secondary" onClick={onClose}>Abbrechen</button>
-          {player && <button className="btn danger" onClick={() => { onDelete(form.id); onClose(); }}>Löschen</button>}
-          <button className="btn" onClick={() => { if(!form.name.trim()){alert('Bitte Namen eingeben');return;} onSave(form); onClose(); }}>Speichern</button>
-        </div>
-      </div>
-    </div>
-  );
+  renderBench();
 }
 
-function PlayerCard({ player, onClick }) {
-  return (
-    <div className="player-card" onClick={onClick}>
-      <StarRating value={player.rating} size="small" />
-      <div className="player-photo">👤</div>
-      <span className="badge">{player.position}</span>
-      <div className="player-name">{player.name}</div>
-      <div className="player-sub">
-        {player.trikotnummer ? `#${player.trikotnummer}` : ''} {player.verein ? '· ' + player.verein : ''}
-      </div>
-      {player.marktwert && <div className="player-sub">💰 {Number(player.marktwert).toLocaleString('de-DE')} €</div>}
-    </div>
-  );
+function getInitials(name) {
+  return name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
 }
 
-function KaderTab({ players, setPlayers }) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-
-  const savePlayer = (p) => {
-    setPlayers(prev => {
-      const exists = prev.find(x => x.id === p.id);
-      const next = exists ? prev.map(x => x.id === p.id ? p : x) : [...prev, p];
-      return next;
-    });
-  };
-  const deletePlayer = (id) => setPlayers(prev => prev.filter(p => p.id !== id));
-
-  return (
-    <div>
-      <div className="top-actions">
-        <h2 className="section-title" style={{marginBottom:0}}>Kader ({players.length})</h2>
-        <button className="btn" onClick={() => { setEditing(null); setModalOpen(true); }}>+ Spieler hinzufügen</button>
-      </div>
-      {players.length === 0 ? (
-        <div className="empty-state">Noch keine Spieler im Kader. Füge deinen ersten Spieler hinzu!</div>
-      ) : (
-        <div className="card-grid">
-          {players.map(p => (
-            <PlayerCard key={p.id} player={p} onClick={() => { setEditing(p); setModalOpen(true); }} />
-          ))}
-        </div>
-      )}
-      {modalOpen && (
-        <PlayerModal
-          player={editing}
-          onSave={savePlayer}
-          onDelete={deletePlayer}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
+function renderBench() {
+  const assignedIds = Object.values(currentAssignment);
+  const benchPlayers = players.filter(p => !assignedIds.includes(p.id));
+  const el = document.getElementById('benchList');
+  if (benchPlayers.length === 0) {
+    el.innerHTML = '<div class="empty-state" style="padding:10px;">Keine Spieler auf der Bank</div>';
+    return;
+  }
+  el.innerHTML = benchPlayers.map(p => `
+    <div class="bench-player ${selectedBenchPlayer === p.id ? 'selected' : ''}" onclick="onBenchClick('${p.id}')">
+      <div class="mini-photo">👤</div>
+      <div class="mini-name">${p.name}</div>
     </div>
-  );
+  `).join('');
 }
 
-function FieldSlot({ slot, player, onDrop, onDragStart, onClickEmpty }) {
-  const [over, setOver] = useState(false);
-  return (
-    <div
-      className={"field-slot" + (over ? " dragover" : "")}
-      style={{ left: slot.x + '%', top: slot.y + '%' }}
-      onDragOver={e => { e.preventDefault(); setOver(true); }}
-      onDragLeave={() => setOver(false)}
-      onDrop={e => { e.preventDefault(); setOver(false); onDrop(slot.slotId); }}
-    >
-      <div
-        className={"slot-circle" + (!player ? " slot-empty" : "")}
-        draggable={!!player}
-        onDragStart={() => player && onDragStart({ type: 'field', slotId: slot.slotId, playerId: player.id })}
-      >
-        {player ? '👤' : '+'}
-      </div>
-      {player && <div className="slot-name">{player.name.split(' ').pop()}</div>}
-      {!player && <div className="slot-name" style={{opacity:0.6}}>{slot.pos}</div>}
-    </div>
-  );
+function onBenchClick(playerId) {
+  if (selectedBenchPlayer === playerId) {
+    selectedBenchPlayer = null;
+  } else {
+    selectedBenchPlayer = playerId;
+  }
+  document.getElementById('hintBox').classList.toggle('active', !!selectedBenchPlayer);
+  renderBench();
 }
 
-function AufstellungTab({ players, lineup, setLineup }) {
-  const [dragData, setDragData] = useState(null);
-
-  const formation = FORMATIONS[lineup.formation];
-
-  const setFormationType = (key) => {
-    setLineup(l => ({ ...l, formation: key, startingXI: {} }));
-  };
-
-  const getPlayer = (id) => players.find(p => p.id === id);
-
-  const benchPlayers = players.filter(p => !Object.values(lineup.startingXI).includes(p.id));
-
-  const handleDropOnSlot = (slotId) => {
-    if (!dragData) return;
-    setLineup(l => {
-      const xi = { ...l.startingXI };
-      if (dragData.type === 'bench') {
-        // remove player from any existing slot
-        Object.keys(xi).forEach(k => { if (xi[k] === dragData.playerId) delete xi[k]; });
-        const displaced = xi[slotId];
-        xi[slotId] = dragData.playerId;
-        return { ...l, startingXI: xi };
-      } else if (dragData.type === 'field') {
-        const fromSlot = dragData.slotId;
-        const displaced = xi[slotId];
-        xi[slotId] = xi[fromSlot];
-        if (displaced) xi[fromSlot] = displaced; else delete xi[fromSlot];
-        return { ...l, startingXI: xi };
-      }
-      return l;
-    });
-    setDragData(null);
-  };
-
-  const handleDropOnBench = () => {
-    if (!dragData) return;
-    if (dragData.type === 'field') {
-      setLineup(l => {
-        const xi = { ...l.startingXI };
-        delete xi[dragData.slotId];
-        return { ...l, startingXI: xi };
-      });
+function onSlotClick(slotId, currentPlayer) {
+  if (selectedBenchPlayer) {
+    // place selected bench player here (swap if occupied)
+    currentAssignment[slotId] = selectedBenchPlayer;
+    selectedBenchPlayer = null;
+    document.getElementById('hintBox').classList.remove('active');
+    save();
+    renderField();
+  } else if (currentPlayer) {
+    // remove player from slot back to bench
+    if (confirm(currentPlayer.name + ' zurück auf die Bank setzen?')) {
+      delete currentAssignment[slotId];
+      save();
+      renderField();
     }
-    setDragData(null);
-  };
-
-  return (
-    <div>
-      <h2 className="section-title">Aufstellung</h2>
-      <div className="formation-select">
-        {Object.keys(FORMATIONS).map(f => (
-          <div key={f} className={"formation-btn" + (lineup.formation === f ? " active" : "")}
-            onClick={() => setFormationType(f)}>{f}</div>
-        ))}
-      </div>
-
-      <div className="field-wrap">
-        <div className="field-lines"></div>
-        <div className="center-circle"></div>
-        <div className="penalty-top"></div>
-        <div className="penalty-bottom"></div>
-        {formation.map((slot, i) => {
-          const slotId = 'slot' + i;
-          const playerId = lineup.startingXI[slotId];
-          const player = playerId ? getPlayer(playerId) : null;
-          return (
-            <FieldSlot
-              key={slotId}
-              slot={{ ...slot, slotId }}
-              player={player}
-              onDrop={handleDropOnSlot}
-              onDragStart={setDragData}
-            />
-          );
-        })}
-      </div>
-
-      <div className="bench-wrap" onDragOver={e => e.preventDefault()} onDrop={handleDropOnBench}>
-        <div className="bench-title">Bank ({benchPlayers.length} Spieler)</div>
-        {benchPlayers.length === 0 ? (
-          <div style={{fontSize:13, color:'#6b7280'}}>Keine Spieler auf der Bank</div>
-        ) : (
-          <div className="bench-list">
-            {benchPlayers.map(p => (
-              <div key={p.id} className="bench-player" draggable
-                onDragStart={() => setDragData({ type: 'bench', playerId: p.id })}>
-                <div style={{fontSize:22}}>👤</div>
-                <div style={{fontSize:10, fontWeight:700, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{p.name}</div>
-                <div style={{fontSize:9, color:'#9ca3af'}}>{p.position}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  }
 }
 
-function TaktikTab({ lineup, setLineup }) {
-  return (
-    <div>
-      <h2 className="section-title">Taktik</h2>
-      <label className="field-label">Spielidee</label>
-      <textarea className="input" style={{minHeight:90}}
-        value={lineup.tacticNotes?.idee || ''}
-        onChange={e => setLineup(l => ({...l, tacticNotes: {...l.tacticNotes, idee: e.target.value}}))}
-        placeholder="z.B. Hohes Pressing, schnelle Umschaltmomente..." />
-
-      <label className="field-label">Pressing-Verhalten</label>
-      <textarea className="input" style={{minHeight:90}}
-        value={lineup.tacticNotes?.pressing || ''}
-        onChange={e => setLineup(l => ({...l, tacticNotes: {...l.tacticNotes, pressing: e.target.value}}))}
-        placeholder="z.B. Ab welcher Zone wird gepresst..." />
-
-      <label className="field-label">Sonstige Anmerkungen</label>
-      <textarea className="input" style={{minHeight:90}}
-        value={lineup.tacticNotes?.sonstiges || ''}
-        onChange={e => setLineup(l => ({...l, tacticNotes: {...l.tacticNotes, sonstiges: e.target.value}}))}
-        placeholder="Standardsituationen, Sonderaufgaben..." />
-
-      <div style={{marginTop:16, padding:14, background:'#161b22', borderRadius:14, border:'1px solid #263447'}}>
-        <div style={{fontSize:13, color:'#9ca3af'}}>💡 Tipp: Die Taktiknotizen werden zusammen mit der aktuellen Aufstellung gespeichert (Tab "Gespeichert").</div>
-      </div>
-    </div>
-  );
+function resetFormation() {
+  if (!confirm('Aktuelle Aufstellung zurücksetzen? Alle Spieler kommen zurück auf die Bank.')) return;
+  currentAssignment = {};
+  selectedBenchPlayer = null;
+  save();
+  renderField();
 }
 
-function GespeichertTab({ lineup, setLineup, savedLineups, setSavedLineups, players }) {
-  const [name, setName] = useState('');
-
-  const saveCurrent = () => {
-    if (!name.trim()) { alert('Bitte einen Namen für die Aufstellung eingeben'); return; }
-    const entry = {
-      formationId: uid(),
-      name: name.trim(),
-      formation: lineup.formation,
-      startingXI: lineup.startingXI,
-      tacticNotes: lineup.tacticNotes
-    };
-    setSavedLineups(prev => [...prev, entry]);
-    setName('');
-  };
-
-  const loadLineup = (entry) => {
-    setLineup({ formation: entry.formation, startingXI: entry.startingXI, tacticNotes: entry.tacticNotes });
-    alert('Aufstellung "' + entry.name + '" geladen. Wechsle zum Tab "Aufstellung" um sie zu sehen.');
-  };
-
-  const deleteLineup = (id) => {
-    setSavedLineups(prev => prev.filter(l => l.formationId !== id));
-  };
-
-  const overwriteLineup = (id) => {
-    setSavedLineups(prev => prev.map(l => l.formationId === id ? {
-      ...l, formation: lineup.formation, startingXI: lineup.startingXI, tacticNotes: lineup.tacticNotes
-    } : l));
-    alert('Überschrieben!');
-  };
-
-  return (
-    <div>
-      <h2 className="section-title">Aufstellungen speichern</h2>
-      <div className="row" style={{marginBottom:20}}>
-        <input className="input" style={{marginBottom:0}} placeholder='z.B. "Heimspiel vs. Bayern"'
-          value={name} onChange={e=>setName(e.target.value)} />
-        <button className="btn" style={{flex:'0 0 auto'}} onClick={saveCurrent}>Speichern</button>
-      </div>
-
-      <h3 style={{fontSize:14, color:'#9ca3af', marginBottom:10}}>Gespeicherte Aufstellungen ({savedLineups.length})</h3>
-      {savedLineups.length === 0 ? (
-        <div className="empty-state">Noch keine Aufstellungen gespeichert.</div>
-      ) : savedLineups.map(entry => (
-        <div key={entry.formationId} className="saved-lineup-card">
-          <div>
-            <div style={{fontWeight:700, fontSize:14}}>{entry.name}</div>
-            <div style={{fontSize:12, color:'#9ca3af'}}>{entry.formation} · {Object.keys(entry.startingXI || {}).length} Spieler aufgestellt</div>
-          </div>
-          <div style={{display:'flex', gap:6, flexWrap:'wrap'}}>
-            <button className="btn small" onClick={() => loadLineup(entry)}>Laden</button>
-            <button className="btn small secondary" onClick={() => overwriteLineup(entry.formationId)}>Überschreiben</button>
-            <button className="btn small danger" onClick={() => deleteLineup(entry.formationId)}>Löschen</button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+// ---------- SAVE FORMATIONS ----------
+function openSaveFormationModal() {
+  document.getElementById('formationName').value = '';
+  document.getElementById('saveFormationModal').classList.add('active');
 }
 
-function App() {
-  const [tab, setTab] = useState('kader');
-  const [players, setPlayers] = useState(() => loadLS('players', []));
-  const [lineup, setLineup] = useState(() => loadLS('currentLineup', {
-    formation: '4-4-2', startingXI: {}, tacticNotes: { idee:'', pressing:'', sonstiges:'' }
-  }));
-  const [savedLineups, setSavedLineups] = useState(() => loadLS('savedLineups', []));
-
-  useEffect(() => saveLS('players', players), [players]);
-  useEffect(() => saveLS('currentLineup', lineup), [lineup]);
-  useEffect(() => saveLS('savedLineups', savedLineups), [savedLineups]);
-
-  const tabs = [
-    { key: 'kader', label: 'Kader' },
-    { key: 'aufstellung', label: 'Aufstellung' },
-    { key: 'taktik', label: 'Taktik' },
-    { key: 'gespeichert', label: 'Gespeichert' },
-  ];
-
-  return (
-    <div className="app">
-      <div className="header">
-        <span style={{fontSize:26}}>⚽</span>
-        <h1>Kader-Manager</h1>
-      </div>
-
-      <div className="tabs">
-        {tabs.map(t => (
-          <div key={t.key} className={"tab" + (tab === t.key ? " active" : "")} onClick={() => setTab(t.key)}>
-            {t.label}
-          </div>
-        ))}
-      </div>
-
-      {tab === 'kader' && <KaderTab players={players} setPlayers={setPlayers} />}
-      {tab === 'aufstellung' && <AufstellungTab players={players} lineup={lineup} setLineup={setLineup} />}
-      {tab === 'taktik' && <TaktikTab lineup={lineup} setLineup={setLineup} />}
-      {tab === 'gespeichert' && (
-        <GespeichertTab
-          lineup={lineup} setLineup={setLineup}
-          savedLineups={savedLineups} setSavedLineups={setSavedLineups}
-          players={players}
-        />
-      )}
-    </div>
-  );
+function confirmSaveFormation() {
+  const name = document.getElementById('formationName').value.trim();
+  if (!name) { alert('Bitte einen Namen eingeben.'); return; }
+  savedFormations.push({
+    id: crypto.randomUUID(),
+    name,
+    formationType: currentFormationType,
+    assignment: {...currentAssignment},
+    date: new Date().toLocaleDateString('de-DE')
+  });
+  save();
+  closeModal('saveFormationModal');
+  alert('Aufstellung gespeichert!');
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+function renderSavedList() {
+  const el = document.getElementById('savedList');
+  if (savedFormations.length === 0) {
+    el.innerHTML = '<div class="empty-state">Noch keine Aufstellungen gespeichert.</div>';
+    return;
+  }
+  el.innerHTML = savedFormations.map(f => `
+    <div class="saved-item">
+      <div class="info">
+        <strong>${f.name}</strong>
+        <span>${f.formationType} • ${f.date}</span>
+      </div>
+      <div class="actions">
+        <button class="btn secondary" style="color:#fff" onclick="loadFormation('${f.id}')">Laden</button>
+        <button class="btn danger" style="color:#fff" onclick="deleteFormation('${f.id}')">Löschen</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadFormation(id) {
+  const f = savedFormations.find(f => f.id === id);
+  if (!f) return;
+  currentFormationType = f.formationType;
+  currentAssignment = {...f.assignment};
+  save();
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelector('[data-tab="aufstellung"]').classList.add('active');
+  document.getElementById('view-aufstellung').classList.add('active');
+  renderField();
+}
+
+function deleteFormation(id) {
+  if (!confirm('Diese Aufstellung wirklich löschen?')) return;
+  savedFormations = savedFormations.filter(f => f.id !== id);
+  save();
+  renderSavedList();
+}
+
+// ---------- TACTICS ----------
+function saveTactics() {
+  localStorage.setItem('tacticIdea', document.getElementById('tacticIdea').value);
+  localStorage.setItem('tacticPressing', document.getElementById('tacticPressing').value);
+  alert('Taktik gespeichert!');
+}
+function loadTactics() {
+  document.getElementById('tacticIdea').value = localStorage.getItem('tacticIdea') || '';
+  document.getElementById('tacticPressing').value = localStorage.getItem('tacticPressing') || '';
+}
+
+// ---------- INIT ----------
+renderPlayerGrid();
+renderField();
+loadTactics();
 </script>
+
 </body>
 </html>
